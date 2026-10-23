@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory · Home Inventory{% endblock %}
+
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Home catalog</div>
+            <h1>Inventory</h1>
+            <div class="meta">
+                {{ items|length }} item{% if items|length != 1 %}s{% endif %} shown
+            </div>
+        </div>
+
+        <a class="button" href="{{ url_for('create_item') }}">Add item</a>
+    </div>
+
+    <form class="card filters" method="get">
+        <div class="field wide">
+            <label for="q">Search</label>
+            <input id="q" name="q" value="{{ query }}" placeholder="Name, description, tag, or notes...">
+        </div>
+
+        <div class="field">
+            <label for="item_type_id">Type</label>
+            <select id="item_type_id" name="item_type_id">
+                <option value="">All types</option>
+                {% for type in types %}
+                    <option value="{{ type.id }}" {% if filters.item_type_id == type.id|string %}selected{% endif %}>
+                        {{ type.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="brand_id">Brand</label>
+            <select id="brand_id" name="brand_id">
+                <option value="">All brands</option>
+                {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if filters.brand_id == brand.id|string %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="category">Category</label>
+            <input id="category" name="category" value="{{ filters.category }}">
+        </div>
+
+        <div class="field">
+            <label for="location">Location</label>
+            <input id="location" name="location" value="{{ filters.location }}">
+        </div>
+
+        <div class="field">
+            <label for="tag">Tag</label>
+            <input id="tag" name="tag" value="{{ filters.tag }}">
+        </div>
+
+        <button type="submit">Filter</button>
+        <a class="button secondary" href="{{ url_for('index') }}">Clear</a>
+    </form>
+
+    {% if items %}
+        <div class="grid">
+            {% for item in items %}
+                <article class="card item-card">
+                    {% if item.thumbnail %}
+                        <img
+                            class="thumb"
+                            src="{{ url_for('uploaded_file', item_id=item.id, filename=item.thumbnail) }}"
+                            alt="Photo of {{ item.name }}"
+                        >
+                    {% else %}
+                        <div class="placeholder">No photo</div>
+                    {% endif %}
+
+                    <div class="item-card-body">
+                        <div class="card-kicker">
+                            {{ item.type_name }}{% if item.brand_name %} · {{ item.brand_name }}{% endif %}
+                        </div>
+                        <h2>
+                            <a href="{{ url_for('item_detail', item_id=item.id) }}">{{ item.name }}</a>
+                        </h2>
+
+                        {% if item.location %}
+                            <div class="meta">{{ item.location }}</div>
+                        {% endif %}
+
+                        {% if item.tags %}
+                            <p class="meta">{{ item.tags }}</p>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card empty-state">
+            <h2>No items found</h2>
+            <p>Try clearing the filters or add your first item.</p>
+            <a class="button" href="{{ url_for('create_item') }}">Add item</a>
+        </div>
+    {% endif %}
+{% endblock %}

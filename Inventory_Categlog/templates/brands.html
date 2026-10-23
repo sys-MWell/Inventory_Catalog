@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Brands · Home Inventory{% endblock %}
+
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Catalog configuration</div>
+            <h1>Brands</h1>
+            <div class="meta">Reusable brand choices for your inventory.</div>
+        </div>
+
+        <a class="button secondary" href="{{ url_for('index') }}">Back to inventory</a>
+    </div>
+
+    <div class="detail-grid management-grid">
+        <section class="card">
+            <h2>Add a brand</h2>
+            <p class="meta">Add any manufacturer, studio, retailer, or collection label you use. Deleting a brand clears it from existing items.</p>
+
+            <form method="post">
+                <label for="name">Brand name</label>
+                <input id="name" name="name" required maxlength="100">
+
+                <div class="form-actions">
+                    <button type="submit">Add brand</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Available brands</h2>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Items</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for brand in brands %}
+                            <tr>
+                                <td>{{ brand.name }}</td>
+                                <td>{{ brand.item_count }}</td>
+                                <td class="table-actions">
+                                    <form class="inline-form" method="post" action="{{ url_for('edit_brand', brand_id=brand.id) }}">
+                                        <label class="sr-only" for="brand-name-{{ brand.id }}">Rename {{ brand.name }}</label>
+                                        <input id="brand-name-{{ brand.id }}" name="name" value="{{ brand.name }}" maxlength="100" required>
+                                        <button class="small-button" type="submit">Save</button>
+                                    </form>
+                                    <form class="inline-form" method="post" action="{{ url_for('delete_brand', brand_id=brand.id) }}" onsubmit="return confirm('Delete this brand? Existing items will lose this brand selection.');">
+                                        <button class="danger small-button" type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+{% endblock %}
