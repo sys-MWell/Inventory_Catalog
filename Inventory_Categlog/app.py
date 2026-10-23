@@ -9,6 +9,7 @@ from functools import wraps
 from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, send_from_directory, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -41,6 +42,21 @@ def create_app():
             if "brand_id" not in columns:
                 db.execute("ALTER TABLE items ADD COLUMN brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL")
             db.execute("CREATE INDEX IF NOT EXISTS idx_items_brand ON items(brand_id)")
+            ensure_accounts(db)
+
+    def ensure_accounts(db):
+        accounts = (("admin", "admin"), ("viewer", "viewer"))
+        generated = []
+        for username, role in accounts:
+            if db.execute("SELECT 1 FROM users WHERE username = ?", (username,)).fetchone() is None:
+                password = secrets.token_urlsafe(12)
+                db.execute("INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)", (username, generate_password_hash(password), role, now()))
+                generated.append((username, password))
+        if generated:
+            print("\nInventory account passwords (record these securely; they are not stored in plaintext):")
+            for username, password in generated:
+                print(f"  {username}: {password}")
+            print()
 
     def form_configuration(item_type_id=None):
         with connect_db() as db:
@@ -71,14 +87,29 @@ def create_app():
     def login_required(view):
         @wraps(view)
         def wrapped(*args, **kwargs):
-            if os.environ.get("INVENTORY_PASSWORD") and not session.get("authenticated"):
+            if not session.get("user_id"):
                 return redirect(url_for("login", next=request.path))
+            return view(*args, **kwargs)
+        return wrapped
+
+    def admin_required(view):
+        @wraps(view)
+        def wrapped(*args, **kwargs):
+            if not session.get("user_id"):
+                return redirect(url_for("login", next=request.path))
+            if session.get("role") != "admin":
+                flash("Administrator access is required for that action.", "error")
+                return redirect(url_for("index"))
             return view(*args, **kwargs)
         return wrapped
 
     @app.context_processor
     def inject_config():
-        return {"auth_enabled": bool(os.environ.get("INVENTORY_PASSWORD"))}
+        return {
+            "auth_enabled": True,
+            "current_username": session.get("username"),
+            "current_role": session.get("role"),
+        }
 
     @app.before_request
     def ensure_database():
@@ -88,8 +119,15 @@ def create_app():
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "POST":
-            if secrets.compare_digest(request.form.get("password", ""), os.environ.get("INVENTORY_PASSWORD", "")):
-                session["authenticated"] = True
+            username = request.form.get("username", "").strip().lower()
+            password = request.form.get("password", "")
+            with connect_db() as db:
+                user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+            if user and check_password_hash(user["password_hash"], password):
+                session.clear()
+                session["user_id"] = user["id"]
+                session["username"] = user["username"]
+                session["role"] = user["role"]
                 return redirect(request.args.get("next") or url_for("index"))
             flash("Incorrect password.", "error")
         return render_template("login.html")
@@ -170,7 +208,7 @@ def create_app():
         return errors
 
     @app.route("/items/new", methods=["GET", "POST"])
-    @login_required
+    @admin_required
     def create_item():
         with connect_db() as db:
             types = db.execute("SELECT * FROM item_types ORDER BY name").fetchall()
@@ -197,7 +235,7 @@ def create_app():
         return render_template("item_form.html", item=None, types=types, brands=brands, fields=fields, data=data, title="Add item")
 
     @app.route("/items/<int:item_id>/edit", methods=["GET", "POST"])
-    @login_required
+    @admin_required
     def edit_item(item_id):
         item, images = get_item(item_id)
         data = form_data() if request.method == "POST" else dict(item)
@@ -227,7 +265,7 @@ def create_app():
         return render_template("item_detail.html", item=item, images=images, details=json.loads(item["details"] or "{}"))
 
     @app.post("/items/<int:item_id>/delete")
-    @login_required
+    @admin_required
     def delete_item(item_id):
         item, _ = get_item(item_id)
         with connect_db() as db:
@@ -262,7 +300,7 @@ def create_app():
                 next_order += 1
 
     @app.post("/images/<int:image_id>/delete")
-    @login_required
+    @admin_required
     def delete_image(image_id):
         with connect_db() as db:
             image = db.execute("SELECT * FROM images WHERE id = ?", (image_id,)).fetchone()
@@ -281,7 +319,7 @@ def create_app():
         return send_from_directory(UPLOAD_FOLDER / f"item-{item_id}", filename)
 
     @app.route("/types", methods=["GET", "POST"])
-    @login_required
+    @admin_required
     def types():
         if request.method == "POST":
             name = request.form.get("name", "").strip()
@@ -298,7 +336,7 @@ def create_app():
         return render_template("types.html", types=item_types)
 
     @app.post("/types/<int:type_id>/edit")
-    @login_required
+    @admin_required
     def edit_type(type_id):
         name = request.form.get("name", "").strip()
         if not name:
@@ -315,7 +353,7 @@ def create_app():
         return redirect(url_for("types"))
 
     @app.post("/types/<int:type_id>/delete")
-    @login_required
+    @admin_required
     def delete_type(type_id):
         with connect_db() as db:
             item_type = db.execute("SELECT name FROM item_types WHERE id = ?", (type_id,)).fetchone()
@@ -330,7 +368,7 @@ def create_app():
         return redirect(url_for("types"))
 
     @app.route("/brands", methods=["GET", "POST"])
-    @login_required
+    @admin_required
     def brands():
         if request.method == "POST":
             name = request.form.get("name", "").strip()
@@ -351,7 +389,7 @@ def create_app():
         return render_template("brands.html", brands=brand_rows)
 
     @app.post("/brands/<int:brand_id>/edit")
-    @login_required
+    @admin_required
     def edit_brand(brand_id):
         name = request.form.get("name", "").strip()
         if not name:
@@ -368,7 +406,7 @@ def create_app():
         return redirect(url_for("brands"))
 
     @app.post("/brands/<int:brand_id>/delete")
-    @login_required
+    @admin_required
     def delete_brand(brand_id):
         with connect_db() as db:
             brand = db.execute("SELECT name FROM brands WHERE id = ?", (brand_id,)).fetchone()
@@ -379,7 +417,7 @@ def create_app():
         return redirect(url_for("brands"))
 
     @app.get("/export/<format>")
-    @login_required
+    @admin_required
     def export_data(format):
         with connect_db() as db:
             items = [dict(row) for row in db.execute("""
@@ -406,7 +444,7 @@ def create_app():
         abort(404)
 
     @app.get("/backup.zip")
-    @login_required
+    @admin_required
     def backup():
         memory = io.BytesIO()
         with zipfile.ZipFile(memory, "w", zipfile.ZIP_DEFLATED) as archive:

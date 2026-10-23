@@ -12,7 +12,9 @@
             </div>
         </div>
 
-        <a class="button" href="{{ url_for('create_item') }}">Add item</a>
+        {% if current_role == 'admin' %}
+            <a class="button" href="{{ url_for('create_item') }}">Add item</a>
+        {% endif %}
     </div>
 
     <form class="card filters" method="get">
@@ -101,7 +103,9 @@
         <div class="card empty-state">
             <h2>No items found</h2>
             <p>Try clearing the filters or add your first item.</p>
-            <a class="button" href="{{ url_for('create_item') }}">Add item</a>
+            {% if current_role == 'admin' %}
+                <a class="button" href="{{ url_for('create_item') }}">Add item</a>
+            {% endif %}
         </div>
     {% endif %}
 {% endblock %}

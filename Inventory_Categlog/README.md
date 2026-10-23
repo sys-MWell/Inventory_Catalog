@@ -26,6 +26,15 @@ Open `http://localhost:5000` on the Pi. From another device on the home network,
 
 The app creates `inventory.db` and `uploads/` automatically and seeds the initial item types on first start. Use **Item types** to add custom types.
 
+## Accounts and permissions
+
+The application creates two local accounts the first time the database starts:
+
+- `admin` can create, edit, and delete items, photos, brands, and item types. The admin can also export data and download backups.
+- `viewer` can sign in, browse inventory, search, filter, and view item photos, but cannot change or delete anything.
+
+The generated temporary passwords are printed once in the console when the accounts are created. Record them securely. Passwords are stored only as hashes in SQLite, so they cannot be recovered from the database.
+
 ## Database-backed catalog configuration
 
 Item types and brands are stored in SQLite, not in the page templates. The initial catalog includes brands such as Disney, Universal, LEGO, Funko, Hasbro, Mattel, Nintendo, Sony, Microsoft, Apple, and Samsung. Use **Brands** to add additional brands and filter inventory by brand.
