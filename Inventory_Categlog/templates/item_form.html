@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} · Home Inventory{% endblock %}
+
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Inventory item</div>
+            <h1>{{ title }}</h1>
+        </div>
+
+        <a class="button secondary" href="{{ url_for('item_detail', item_id=item.id) if item else url_for('index') }}">
+            Cancel
+        </a>
+    </div>
+
+    <form class="card form-card" method="post" enctype="multipart/form-data">
+        <section class="form-section">
+            <h2>Basic information</h2>
+
+            <div class="form-grid">
+                <div class="full">
+                    <label for="name">Name *</label>
+                    <input id="name" name="name" required value="{{ data.get('name', '') }}">
+                </div>
+
+                <div>
+                    <label for="item_type_id">Item type *</label>
+                    <select id="item_type_id" name="item_type_id" required onchange="this.form.submit()">
+                        <option value="">Choose a type</option>
+                        {% for type in types %}
+                            <option value="{{ type.id }}" {% if data.get('item_type_id')|string == type.id|string %}selected{% endif %}>
+                                {{ type.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <small class="help">Changing type refreshes its configured fields.</small>
+                </div>
+
+                <div>
+                    <label for="brand_id">Brand</label>
+                    <select id="brand_id" name="brand_id">
+                        <option value="">No brand selected</option>
+                        {% for brand in brands %}
+                            <option value="{{ brand.id }}" {% if data.get('brand_id')|string == brand.id|string %}selected{% endif %}>
+                                {{ brand.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="full">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description">{{ data.get('description', '') }}</textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h2>Where and value</h2>
+
+            <div class="form-grid">
+                <div>
+                    <label for="category">Category or collection</label>
+                    <input id="category" name="category" value="{{ data.get('category', '') }}">
+                </div>
+
+                <div>
+                    <label for="location">Location</label>
+                    <input id="location" name="location" value="{{ data.get('location', '') }}" placeholder="e.g. Office shelf A">
+                </div>
+
+                <div>
+                    <label for="condition">Condition</label>
+                    <input id="condition" name="condition" value="{{ data.get('condition', '') }}">
+                </div>
+
+                <div>
+                    <label for="tags">Tags</label>
+                    <input id="tags" name="tags" value="{{ data.get('tags', '') }}" placeholder="comma, separated, tags">
+                </div>
+
+                <div>
+                    <label for="purchase_date">Purchase date</label>
+                    <input id="purchase_date" name="purchase_date" type="date" value="{{ data.get('purchase_date', '') }}">
+                </div>
+
+                <div>
+                    <label for="purchase_price">Purchase price</label>
+                    <input id="purchase_price" name="purchase_price" type="number" step="0.01" min="0" value="{{ data.get('purchase_price', '') or '' }}">
+                </div>
+
+                <div>
+                    <label for="estimated_value">Estimated current value</label>
+                    <input id="estimated_value" name="estimated_value" type="number" step="0.01" min="0" value="{{ data.get('estimated_value', '') or '' }}">
+                </div>
+            </div>
+        </section>
+
+        {% if fields %}
+            <section class="form-section">
+                <h2>Configured details</h2>
+
+                {% set details = data.get('details', {}) %}
+                <div class="form-grid">
+                    {% for field in fields %}
+                        <div>
+                            <label for="detail_{{ field.field_key }}">{{ field.label }}</label>
+
+                            {% if field.input_type == 'select' %}
+                                <select id="detail_{{ field.field_key }}" name="detail_{{ field.field_key }}">
+                                    <option value="">Choose...</option>
+                                    {% for option in field.options %}
+                                        <option value="{{ option }}" {% if details.get(field.field_key) == option %}selected{% endif %}>
+                                            {{ option }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% else %}
+                                <input
+                                    id="detail_{{ field.field_key }}"
+                                    name="detail_{{ field.field_key }}"
+                                    type="{{ field.input_type }}"
+                                    value="{{ details.get(field.field_key, '') }}"
+                                >
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        <section class="form-section">
+            <h2>Photos and notes</h2>
+
+            <div class="form-grid">
+                <div class="full">
+                    <label for="photos">Photos</label>
+                    <input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
+                    <small class="help">JPEG, PNG, GIF, or WebP; up to 10 MB per request.</small>
+                </div>
+
+                <div class="full">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes">{{ data.get('notes', '') }}</textarea>
+                </div>
+            </div>
+        </section>
+
+        <div class="form-actions">
+            <button type="submit">{{ 'Save changes' if item else 'Add item' }}</button>
+            <a class="button secondary" href="{{ url_for('item_detail', item_id=item.id) if item else url_for('index') }}">
+                Cancel
+            </a>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.name }} · Home Inventory{% endblock %}
+
+{% block content %}
+    <div class="detail-header">
+        <div>
+            <div class="meta">
+                {{ item.type_name }}
+                {% if item.brand_name %} · {{ item.brand_name }}{% endif %}
+                {% if item.category %} · {{ item.category }}{% endif %}
+            </div>
+            <h1>{{ item.name }}</h1>
+        </div>
+
+        <div class="actions">
+            <a class="button secondary" href="{{ url_for('edit_item', item_id=item.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('delete_item', item_id=item.id) }}" onsubmit="return confirm('Delete this item and its photos?');">
+                <button class="danger" type="submit">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <section class="panel">
+            <h2>Photos</h2>
+
+            {% if images %}
+                <div class="gallery">
+                    {% for image in images %}
+                        <figure>
+                            <img
+                                src="{{ url_for('uploaded_file', item_id=item.id, filename=image.filename) }}"
+                                alt="{{ image.original_filename or item.name }}"
+                            >
+                            <form method="post" action="{{ url_for('delete_image', image_id=image.id) }}">
+                                <button class="danger small-button" type="submit">Remove</button>
+                            </form>
+                        </figure>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="meta">
+                    No photos yet.
+                    <a href="{{ url_for('edit_item', item_id=item.id) }}">Add photos</a>.
+                </p>
+            {% endif %}
+        </section>
+
+        <section class="panel">
+            <h2>Details</h2>
+
+            <dl>
+                <dt>Location</dt>
+                <dd>{{ item.location or '—' }}</dd>
+
+                <dt>Condition</dt>
+                <dd>{{ item.condition or '—' }}</dd>
+
+                <dt>Purchase date</dt>
+                <dd>{{ item.purchase_date or '—' }}</dd>
+
+                <dt>Purchase price</dt>
+                <dd>{{ '%.2f'|format(item.purchase_price) if item.purchase_price is not none else '—' }}</dd>
+
+                <dt>Estimated value</dt>
+                <dd>{{ '%.2f'|format(item.estimated_value) if item.estimated_value is not none else '—' }}</dd>
+
+                <dt>Tags</dt>
+                <dd>{{ item.tags or '—' }}</dd>
+
+                <dt>Added</dt>
+                <dd>{{ item.created_at }}</dd>
+
+                <dt>Updated</dt>
+                <dd>{{ item.updated_at }}</dd>
+
+                {% for key, value in details.items() %}
+                    <dt>{{ key|replace('_', ' ')|title }}</dt>
+                    <dd>{{ value }}</dd>
+                {% endfor %}
+            </dl>
+        </section>
+    </div>
+
+    {% if item.description or item.notes %}
+        <div class="detail-grid detail-text-grid">
+            <section class="panel">
+                <h2>Description</h2>
+                <p>{{ item.description or '—' }}</p>
+            </section>
+
+            <section class="panel">
+                <h2>Notes</h2>
+                <p>{{ item.notes or '—' }}</p>
+            </section>
+        </div>
+    {% endif %}
+{% endblock %}
