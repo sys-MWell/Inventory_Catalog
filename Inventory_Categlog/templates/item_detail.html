@@ -13,12 +13,14 @@
             <h1>{{ item.name }}</h1>
         </div>
 
-        <div class="actions">
-            <a class="button secondary" href="{{ url_for('edit_item', item_id=item.id) }}">Edit</a>
-            <form method="post" action="{{ url_for('delete_item', item_id=item.id) }}" onsubmit="return confirm('Delete this item and its photos?');">
-                <button class="danger" type="submit">Delete</button>
-            </form>
-        </div>
+        {% if current_role == 'admin' %}
+            <div class="actions">
+                <a class="button secondary" href="{{ url_for('edit_item', item_id=item.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('delete_item', item_id=item.id) }}" onsubmit="return confirm('Delete this item and its photos?');">
+                    <button class="danger" type="submit">Delete</button>
+                </form>
+            </div>
+        {% endif %}
     </div>
 
     <div class="detail-grid">
@@ -33,9 +35,11 @@
                                 src="{{ url_for('uploaded_file', item_id=item.id, filename=image.filename) }}"
                                 alt="{{ image.original_filename or item.name }}"
                             >
-                            <form method="post" action="{{ url_for('delete_image', image_id=image.id) }}">
-                                <button class="danger small-button" type="submit">Remove</button>
-                            </form>
+                                {% if current_role == 'admin' %}
+                                    <form method="post" action="{{ url_for('delete_image', image_id=image.id) }}">
+                                        <button class="danger small-button" type="submit">Remove</button>
+                                    </form>
+                                {% endif %}
                         </figure>
                     {% endfor %}
                 </div>

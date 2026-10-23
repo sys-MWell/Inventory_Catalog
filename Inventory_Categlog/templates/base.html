@@ -11,27 +11,30 @@
         <div class="container nav-wrap">
             <a class="brand" href="{{ url_for('index') }}">Home Inventory</a>
 
-            {% if not auth_enabled or session.get('authenticated') %}
+            {% if current_username %}
                 <nav>
                     <a href="{{ url_for('index') }}">Inventory</a>
-                    <a href="{{ url_for('create_item') }}">Add item</a>
-                    <a href="{{ url_for('types') }}">Item types</a>
-                    <a href="{{ url_for('brands') }}">Brands</a>
 
-                    <details class="menu">
-                        <summary>Tools</summary>
-                        <div class="menu-items">
-                            <a href="{{ url_for('export_data', format='csv') }}">Export CSV</a>
-                            <a href="{{ url_for('export_data', format='json') }}">Export JSON</a>
-                            <a href="{{ url_for('backup') }}">Download backup</a>
-                        </div>
-                    </details>
+                    {% if current_role == 'admin' %}
+                        <a href="{{ url_for('create_item') }}">Add item</a>
+                        <a href="{{ url_for('types') }}">Item types</a>
+                        <a href="{{ url_for('brands') }}">Brands</a>
 
-                    {% if auth_enabled %}
-                        <form method="post" action="{{ url_for('logout') }}">
-                            <button class="link-button" type="submit">Log out</button>
-                        </form>
+                        <details class="menu">
+                            <summary>Tools</summary>
+                            <div class="menu-items">
+                                <a href="{{ url_for('export_data', format='csv') }}">Export CSV</a>
+                                <a href="{{ url_for('export_data', format='json') }}">Export JSON</a>
+                                <a href="{{ url_for('backup') }}">Download backup</a>
+                            </div>
+                        </details>
                     {% endif %}
+
+                    <span class="user-badge">{{ current_username }} ({{ current_role }})</span>
+
+                    <form method="post" action="{{ url_for('logout') }}">
+                        <button class="link-button" type="submit">Log out</button>
+                    </form>
                 </nav>
             {% endif %}
         </div>
