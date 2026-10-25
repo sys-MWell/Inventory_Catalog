@@ -41,6 +41,8 @@ def create_app():
             columns = {row[1] for row in db.execute("PRAGMA table_info(items)").fetchall()}
             if "brand_id" not in columns:
                 db.execute("ALTER TABLE items ADD COLUMN brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL")
+            if "box_condition" not in columns:
+                db.execute("ALTER TABLE items ADD COLUMN box_condition TEXT")
             db.execute("CREATE INDEX IF NOT EXISTS idx_items_brand ON items(brand_id)")
             ensure_accounts(db)
 
@@ -185,6 +187,7 @@ def create_app():
             "category": request.form.get("category", "").strip(),
             "location": request.form.get("location", "").strip(),
             "condition": request.form.get("condition", "").strip(),
+            "box_condition": request.form.get("box_condition", "").strip(),
             "purchase_date": request.form.get("purchase_date", "").strip(),
             "purchase_price": request.form.get("purchase_price", "").strip() or None,
             "estimated_value": request.form.get("estimated_value", "").strip() or None,
@@ -223,9 +226,9 @@ def create_app():
                 with connect_db() as db:
                     cursor = db.execute("""
                         INSERT INTO items (name, description, item_type_id, brand_id, category, location, condition,
-                        purchase_date, purchase_price, estimated_value, tags, notes, details, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), timestamp, timestamp))
+                        box_condition, purchase_date, purchase_price, estimated_value, tags, notes, details, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["box_condition"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), timestamp, timestamp))
                     item_id = cursor.lastrowid
                 save_uploads(item_id)
                 flash("Item added.", "success")
@@ -250,8 +253,8 @@ def create_app():
                 with connect_db() as db:
                     db.execute("""
                         UPDATE items SET name=?, description=?, item_type_id=?, brand_id=?, category=?, location=?, condition=?,
-                        purchase_date=?, purchase_price=?, estimated_value=?, tags=?, notes=?, details=?, updated_at=? WHERE id=?
-                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), now(), item_id))
+                        box_condition=?, purchase_date=?, purchase_price=?, estimated_value=?, tags=?, notes=?, details=?, updated_at=? WHERE id=?
+                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["box_condition"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), now(), item_id))
                 save_uploads(item_id)
                 flash("Item updated.", "success")
                 return redirect(url_for("item_detail", item_id=item_id))
@@ -435,7 +438,7 @@ def create_app():
         if format == "csv":
             import csv
             output = io.StringIO()
-            fields = ["id", "name", "type_name", "brand_name", "category", "location", "condition", "purchase_date", "purchase_price", "estimated_value", "tags", "notes", "created_at", "updated_at"]
+            fields = ["id", "name", "type_name", "brand_name", "category", "location", "condition", "box_condition", "purchase_date", "purchase_price", "estimated_value", "tags", "notes", "created_at", "updated_at"]
             writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
             writer.writeheader(); writer.writerows(items)
             response = app.response_class(output.getvalue(), mimetype="text/csv")

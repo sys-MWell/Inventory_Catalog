@@ -26,7 +26,7 @@
 
                 <div>
                     <label for="item_type_id">Item type *</label>
-                    <select id="item_type_id" name="item_type_id" required onchange="this.form.submit()">
+                    <select id="item_type_id" name="item_type_id" required>
                         <option value="">Choose a type</option>
                         {% for type in types %}
                             <option value="{{ type.id }}" {% if data.get('item_type_id')|string == type.id|string %}selected{% endif %}>
@@ -34,7 +34,7 @@
                             </option>
                         {% endfor %}
                     </select>
-                    <small class="help">Changing type refreshes its configured fields.</small>
+                    <small class="help">Choose a type, then use the save button to apply your changes.</small>
                 </div>
 
                 <div>
@@ -73,6 +73,16 @@
                 <div>
                     <label for="condition">Condition</label>
                     <input id="condition" name="condition" value="{{ data.get('condition', '') }}">
+                </div>
+
+                <div>
+                    <label for="box_condition">Box status</label>
+                    <select id="box_condition" name="box_condition">
+                        <option value="">Not specified</option>
+                        {% for option in ['No box', 'Unboxed', 'Boxed - open', 'Boxed - closed', 'Boxed - sealed'] %}
+                            <option value="{{ option }}" {% if data.get('box_condition') == option %}selected{% endif %}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div>
