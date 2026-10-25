@@ -295,6 +295,10 @@ textarea {
     align-items: start;
 }
 
+.management-grid > .card {
+    min-width: 0;
+}
+
 .login-card {
     max-width: 420px;
     margin: 3rem auto;
@@ -302,6 +306,18 @@ textarea {
 
 .login-card form > div + div {
     margin-top: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    margin-top: .5rem;
+    font-weight: 400;
+}
+
+.checkbox-label input {
+    width: auto;
 }
 
 .flash {
@@ -402,8 +418,29 @@ dd {
     overflow-x: auto;
 }
 
+.management-grid .table-wrap {
+    overflow-x: visible;
+}
+
+.management-grid table {
+    table-layout: fixed;
+}
+
+.management-grid th:nth-child(1) {
+    width: 27%;
+}
+
+.management-grid th:nth-child(2) {
+    width: 13%;
+}
+
+.management-grid th:nth-child(3) {
+    width: 60%;
+}
+
 table {
     width: 100%;
+    min-width: 0;
     border-collapse: collapse;
 }
 
@@ -415,19 +452,38 @@ td {
 }
 
 .table-actions {
-    min-width: 280px;
+    min-width: 0;
+    white-space: normal;
 }
 
 .inline-form {
     display: inline-flex;
+    max-width: 100%;
     align-items: center;
     gap: .35rem;
     margin: .15rem .5rem .15rem 0;
+    vertical-align: middle;
 }
 
 .inline-form input {
-    min-width: 130px;
+    min-width: 0;
+    max-width: 100%;
     padding: .35rem .45rem;
+}
+
+.management-grid .table-actions .inline-form:first-child {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    margin-right: 0;
+}
+
+.management-grid .table-actions .inline-form:first-child input {
+    flex: 1 1 100px;
+}
+
+.management-grid .table-actions .inline-form:last-child {
+    margin-right: 0;
 }
 
 .small-button:disabled {
@@ -485,14 +541,14 @@ td {
     }
 
     .management-grid .card {
-        width: calc(100vw - 1rem);
+        width: 100%;
         max-width: none;
     }
 
     .management-grid .table-wrap {
-        width: calc(100% + 2rem);
-        margin-left: -1rem;
-        padding: 0 1rem;
+        width: 100%;
+        margin-left: 0;
+        padding: 0;
         overflow-x: visible;
     }
 

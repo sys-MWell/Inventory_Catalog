@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS items (
 	category TEXT,
 	location TEXT,
 	condition TEXT,
+	box_condition TEXT,
 	purchase_date TEXT,
 	purchase_price REAL,
 	estimated_value REAL,
