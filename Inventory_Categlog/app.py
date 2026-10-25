@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 
-from flask import Flask, abort, flash, redirect, render_template, request, send_file, send_from_directory, session, url_for
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -117,6 +117,16 @@ def create_app():
     def ensure_database():
         if not DATABASE.exists():
             init_db()
+
+    @app.get("/health")
+    def health():
+        try:
+            with connect_db() as db:
+                db.execute("SELECT 1").fetchone()
+        except sqlite3.Error:
+            app.logger.exception("Health check database query failed")
+            return jsonify(status="error", database="unavailable"), 503
+        return jsonify(status="ok", database="ok")
 
     @app.route("/login", methods=["GET", "POST"])
     def login():
