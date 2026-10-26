@@ -65,9 +65,10 @@ Create a DHCP reservation in your router for the Pi's MAC address, using the exa
 
 ### 2. Install and copy the application
 
-On the Pi, from the application directory:
+On the Pi, from your application directory:
 
 ```bash
+cd /home/maxha/inventory/Inventory_Catalog
 sudo apt update
 sudo apt install -y python3-venv
 python3 -m venv .venv
@@ -76,11 +77,11 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Keep the project in a persistent location such as `/home/pi/inventory/Inventory_Categlog`. Do not place the database or uploads on a temporary filesystem.
+The project path is `/home/maxha/inventory/Inventory_Catalog`. Keep the database and uploads in this persistent directory.
 
 ### 3. Create a systemd service
 
-Create `/etc/systemd/system/home-inventory.service` with paths and the Linux username adjusted to match your Pi:
+Create `/etc/systemd/system/home-inventory.service`:
 
 ```ini
 [Unit]
@@ -90,12 +91,12 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/inventory/Inventory_Categlog
+User=maxha
+WorkingDirectory=/home/maxha/inventory/Inventory_Catalog
 Environment=INVENTORY_SECRET_KEY=replace-with-a-long-random-value
-Environment=INVENTORY_DATABASE=/home/pi/inventory/Inventory_Categlog/inventory.db
-Environment=INVENTORY_UPLOADS=/home/pi/inventory/Inventory_Categlog/uploads
-ExecStart=/home/pi/inventory/Inventory_Categlog/.venv/bin/gunicorn --workers 1 --bind 0.0.0.0:5000 --access-logfile - --error-logfile - app:app
+Environment=INVENTORY_DATABASE=/home/maxha/inventory/Inventory_Catalog/inventory.db
+Environment=INVENTORY_UPLOADS=/home/maxha/inventory/Inventory_Catalog/uploads
+ExecStart=/home/maxha/inventory/Inventory_Catalog/.venv/bin/gunicorn --workers 1 --bind 0.0.0.0:5000 --access-logfile - --error-logfile - app:app
 Restart=always
 RestartSec=5
 
@@ -106,7 +107,7 @@ WantedBy=multi-user.target
 Generate a secret before putting it in the service file:
 
 ```bash
-/home/pi/inventory/Inventory_Categlog/.venv/bin/python -c "import secrets; print(secrets.token_hex(32))"
+/home/maxha/inventory/Inventory_Catalog/.venv/bin/python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 Then enable and start it:
