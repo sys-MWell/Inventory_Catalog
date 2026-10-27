@@ -86,6 +86,11 @@
                 </div>
 
                 <div>
+                    <label for="quantity">Quantity</label>
+                    <input id="quantity" name="quantity" type="number" min="1" step="1" required value="{{ data.get('quantity', 1) }}">
+                </div>
+
+                <div>
                     <label for="tags">Tags</label>
                     <input id="tags" name="tags" value="{{ data.get('tags', '') }}" placeholder="comma, separated, tags">
                 </div>
