@@ -65,10 +65,10 @@ Create a DHCP reservation in your router for the Pi's MAC address, using the exa
 
 ### 2. Install and copy the application
 
-On the Pi, from your application directory:
+On the Pi, from the Python application directory:
 
 ```bash
-cd /opt/inventory-catalog
+cd /opt/inventory-catalog/app
 sudo apt update
 sudo apt install -y python3-venv
 python3 -m venv .venv
@@ -77,7 +77,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-The project path is `/opt/inventory-catalog`. Keep the database and uploads in this persistent directory.
+The Python application path is `/opt/inventory-catalog/app`. Keep the database and uploads in this persistent directory.
 
 ### 3. Create a systemd service
 
@@ -92,11 +92,15 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=inventory
-WorkingDirectory=/opt/inventory-catalog
+WorkingDirectory=/opt/inventory-catalog/app
 Environment=INVENTORY_SECRET_KEY=replace-with-a-long-random-value
-Environment=INVENTORY_DATABASE=/opt/inventory-catalog/catalog.sqlite
-Environment=INVENTORY_UPLOADS=/opt/inventory-catalog/uploads
-ExecStart=/opt/inventory-catalog/.venv/bin/gunicorn --workers 1 --bind 0.0.0.0:5000 --access-logfile - --error-logfile - app:app
+Environment=INVENTORY_DATABASE=/opt/inventory-catalog/app/catalog.sqlite
+Environment=INVENTORY_UPLOADS=/opt/inventory-catalog/app/uploads
+
+# Check and install the pinned application requirements before every start.
+ExecStartPre=/opt/inventory-catalog/app/.venv/bin/python -m pip install --disable-pip-version-check --requirement /opt/inventory-catalog/app/requirements.txt
+ExecStart=/opt/inventory-catalog/app/.venv/bin/python /opt/inventory-catalog/app/run.py
+
 Restart=always
 RestartSec=5
 
@@ -107,7 +111,7 @@ WantedBy=multi-user.target
 Generate a secret before putting it in the service file:
 
 ```bash
-/opt/inventory-catalog/.venv/bin/python -c "import secrets; print(secrets.token_hex(32))"
+/opt/inventory-catalog/app/.venv/bin/python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 Then enable and start it:
@@ -118,7 +122,13 @@ sudo systemctl enable --now home-inventory.service
 sudo systemctl status home-inventory.service
 ```
 
-`enable` makes it start after a reboot. `Restart=always` makes systemd restart it after an application failure.
+`ExecStartPre` checks the current `requirements.txt` before every start and installs or updates packages when needed. `ExecStart` always launches `run.py`. `enable` makes the service start after a reboot, and `Restart=always` makes systemd restart it after an application failure.
+
+If the Pi is offline during boot, dependency installation may fail until networking is restored. After the Pi is back online, restart the service:
+
+```bash
+sudo systemctl restart home-inventory.service
+```
 
 ### 4. Open it on your home network
 
