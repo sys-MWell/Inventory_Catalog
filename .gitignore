@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Runtime data
+Inventory_Catalog/catalog.sqlite
+Inventory_Catalog/uploads/
+
+# Python environments and generated files
+.venv/
+Inventory_Catalog/.venv/
+__pycache__/
+*.pyc
