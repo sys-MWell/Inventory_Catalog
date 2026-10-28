@@ -15,7 +15,8 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE = Path(os.environ.get("INVENTORY_DATABASE", BASE_DIR / "catalog.sqlite"))
 UPLOAD_FOLDER = Path(os.environ.get("INVENTORY_UPLOADS", BASE_DIR / "uploads"))
-MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024
+MAX_IMAGE_SIZE = 10 * 1024 * 1024
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
 def now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -315,6 +316,12 @@ def create_app():
                 extension = Path(original).suffix.lower().lstrip(".")
                 if extension not in ALLOWED_EXTENSIONS or not (file.mimetype or "").startswith("image/"):
                     flash(f"Skipped unsupported image: {original}", "error")
+                    continue
+                file.stream.seek(0, os.SEEK_END)
+                image_size = file.stream.tell()
+                file.stream.seek(0)
+                if image_size > MAX_IMAGE_SIZE:
+                    flash(f"Skipped image over 10 MB: {original}", "error")
                     continue
                 generated = f"{secrets.token_hex(12)}.{extension}"
                 file.save(folder / generated)
