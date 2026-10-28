@@ -15,7 +15,7 @@
                 <nav>
                     <a href="{{ url_for('index') }}">Inventory</a>
 
-                    {% if current_role == 'admin' %}
+                    {% if current_role == 'admin' %}ic
                         <a href="{{ url_for('create_item') }}">Add item</a>
                         <a href="{{ url_for('types') }}">Item types</a>
                         <a href="{{ url_for('brands') }}">Brands</a>
