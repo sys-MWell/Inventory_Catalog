@@ -24,7 +24,7 @@ Then configure Visual Studio to use `.venv\Scripts\python.exe` from this project
 
 Open `http://localhost:5000` on the Pi. From another device on the home network, use the Pi's address, for example `http://192.168.1.25:5000`.
 
-The app creates `catalog.sqlite` and `uploads/` automatically and seeds the initial item types on first start. Use **Item types** to add custom types.
+The app creates its local SQLite database and `uploads/` automatically and seeds the initial item types on first start. Use **Item types** to add custom types.
 
 ## Accounts and permissions
 
@@ -53,7 +53,7 @@ Uploaded files are limited to JPEG, PNG, GIF, and WebP images. Generated filenam
 
 ## Backup and export
 
-Use the **Tools** menu to download CSV or JSON data, or a ZIP backup containing `catalog.sqlite` and all uploads. For a complete manual backup, stop the application and copy both `catalog.sqlite` and `uploads/` to another disk. An SSD or reliable USB device is recommended for important data.
+Use the **Tools** menu to download CSV or JSON data, or a ZIP backup containing the local SQLite database and all uploads. For a complete manual backup, stop the application and copy the database file and `uploads/` to another disk. An SSD or reliable USB device is recommended for important data.
 
 ## Raspberry Pi deployment
 
@@ -94,8 +94,8 @@ Type=simple
 User=inventory
 WorkingDirectory=/opt/inventory-catalog/app
 Environment=INVENTORY_SECRET_KEY=replace-with-a-long-random-value
-Environment=INVENTORY_DATABASE=/opt/inventory-catalog/app/catalog.sqlite
-Environment=INVENTORY_UPLOADS=/opt/inventory-catalog/app/uploads
+Environment=INVENTORY_DATABASE=/var/lib/inventory-catalog/catalog.sqlite
+Environment=INVENTORY_UPLOADS=/var/lib/inventory-catalog/uploads
 
 # Check and install the pinned application requirements before every start.
 ExecStartPre=/opt/inventory-catalog/app/.venv/bin/python -m pip install --disable-pip-version-check --requirement /opt/inventory-catalog/app/requirements.txt
@@ -163,4 +163,4 @@ sudo systemctl status home-inventory.service
 sudo journalctl -u home-inventory.service -n 100 --no-pager
 ```
 
-Keep the application limited to your home network with your router and firewall. The login is still important, but it is not a replacement for network security. Schedule regular backups of both `catalog.sqlite` and `uploads/` to another device.
+Keep the application limited to your home network with your router and firewall. The login is still important, but it is not a replacement for network security. Schedule regular backups of the local database and `uploads/` to another device.
