@@ -27,7 +27,7 @@ Open `http://127.0.0.1:5000` in a browser. The application creates its local SQL
 The schema includes generic starter types and brands. To create a clean database manually:
 
 ```bash
-sqlite3 catalog.sqlite < schema.sql
+sqlite3 inventory.db < schema.sql
 ```
 
 Example records can then be added with ordinary SQL, for example:

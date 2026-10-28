@@ -94,7 +94,7 @@ Type=simple
 User=inventory
 WorkingDirectory=/opt/inventory-catalog/app
 Environment=INVENTORY_SECRET_KEY=replace-with-a-long-random-value
-Environment=INVENTORY_DATABASE=/var/lib/inventory-catalog/catalog.sqlite
+Environment=INVENTORY_DATABASE=/var/lib/inventory-catalog/inventory.db
 Environment=INVENTORY_UPLOADS=/var/lib/inventory-catalog/uploads
 
 # Check and install the pinned application requirements before every start.

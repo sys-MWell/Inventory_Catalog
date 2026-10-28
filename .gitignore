@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Runtime data
-Inventory_Catalog/catalog.sqlite
+Inventory_Catalog/inventory.db
 Inventory_Catalog/uploads/
 
 # Python environments and generated files
