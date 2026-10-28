@@ -122,6 +122,7 @@ def create_app():
             init_db()
 
     @app.get("/health")
+    @app.get("/healthz")
     def health():
         try:
             with connect_db() as db:

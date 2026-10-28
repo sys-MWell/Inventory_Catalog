@@ -61,7 +61,7 @@ The recommended setup is Gunicorn managed by `systemd`. This starts the applicat
 
 ### 1. Give the Pi a stable address
 
-Create a DHCP reservation in your router for the Pi's MAC address, using the exact six-pair MAC shown by the Pi or router, so its address remains `192.168.0.138`. If the address changes, bookmarks and health checks will stop working.
+Create a DHCP reservation in your router for the Pi's MAC address, using the exact six-pair MAC shown by the Pi or router, so its address remains stable. If the address changes, bookmarks and health checks will stop working.
 
 ### 2. Install and copy the application
 
@@ -132,9 +132,9 @@ sudo systemctl restart home-inventory.service
 
 ### 4. Open it on your home network
 
-From any device connected to the same Wi-Fi/LAN, open:
+From any device connected to the same Wi-Fi/LAN, open the Pi host name or address:
 
-`http://192.168.0.138:5000`
+`http://pi-hostname.local:5000`
 
 The application already binds to `0.0.0.0`, which allows LAN devices to connect. Do not port-forward port 5000 to the internet.
 
@@ -142,7 +142,7 @@ The application already binds to `0.0.0.0`, which allows LAN devices to connect.
 
 The application exposes an unauthenticated health endpoint for monitoring:
 
-`http://192.168.0.138:5000/healthz`
+`http://pi-hostname.local:5000/healthz`
 
 A healthy response is JSON similar to:
 
@@ -153,7 +153,7 @@ A healthy response is JSON similar to:
 From PowerShell on your PC:
 
 ```powershell
-Invoke-RestMethod http://192.168.0.138:5000/healthz
+Invoke-RestMethod http://pi-hostname.local:5000/healthz
 ```
 
 To inspect the service directly on the Pi:
