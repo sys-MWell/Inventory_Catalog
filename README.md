@@ -61,5 +61,3 @@ See [`Inventory_Catalog/README.md`](Inventory_Catalog/README.md) for systemd, LA
 3. Commit source, schema, and documentation changes.
 4. Pull the code on the deployment host.
 5. Restart the service so application migrations run against that host's local database.
-
-Live databases and uploads should be backed up with the application's backup tools or a deliberate SQLite backup, not merged through Git.
