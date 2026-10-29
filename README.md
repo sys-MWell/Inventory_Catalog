@@ -54,6 +54,8 @@ Do not commit runtime databases, uploaded files, virtual environments, credentia
 
 See [`Inventory_Catalog/README.md`](Inventory_Catalog/README.md) for systemd, LAN access, health checks, HTTPS reverse-proxy instructions, three-hour database backups, and upload-directory permissions. Use a generic deployment location and service account for your environment.
 
+The deployment includes `inventory-db-backup.service` and `inventory-db-backup.timer`. The timer runs the service every three hours, creates a consistent SQLite backup of `inventory.db`, stores backups with owner-only permissions, and removes backups older than two days.
+
 ## Development workflow
 
 1. Make application or schema changes.
