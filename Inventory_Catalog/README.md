@@ -142,7 +142,7 @@ The application already binds to `0.0.0.0`, which allows LAN devices to connect.
 
 The application exposes an unauthenticated health endpoint for monitoring:
 
-`http://pi-hostname.local:5000/healthz`
+`http://pi-hostname.local:5000/health`
 
 A healthy response is JSON similar to:
 
@@ -153,7 +153,7 @@ A healthy response is JSON similar to:
 From PowerShell on your PC:
 
 ```powershell
-Invoke-RestMethod http://pi-hostname.local:5000/healthz
+Invoke-RestMethod http://pi-hostname.local:5000/health
 ```
 
 To inspect the service directly on the Pi:
