@@ -26,6 +26,9 @@
     <Compile Include="run.py" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="deployment\inventory-db-backup.service" />
+    <Content Include="deployment\inventory-db-backup.sh" />
+    <Content Include="deployment\inventory-db-backup.timer" />
     <Content Include="README.md" />
     <Content Include="requirements.txt" />
     <Content Include="schema.sql" />
@@ -40,6 +43,7 @@
     <Content Include="templates\types.html" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="deployment\" />
     <Folder Include="static\" />
     <Folder Include="templates\" />
   </ItemGroup>
