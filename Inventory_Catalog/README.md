@@ -163,4 +163,50 @@ sudo systemctl status home-inventory.service
 sudo journalctl -u home-inventory.service -n 100 --no-pager
 ```
 
-Keep the application limited to your home network with your router and firewall. The login is still important, but it is not a replacement for network security. Schedule regular backups of the local database and `uploads/` to another device.
+### 6. Automated database backups
+
+The repository includes a systemd service and timer under `deployment/`. Install them on the Pi:
+
+```bash
+sudo install -m 0755 deployment/inventory-db-backup.sh /opt/inventory-catalog/app/deployment/inventory-db-backup.sh
+sudo install -m 0644 deployment/inventory-db-backup.service /etc/systemd/system/inventory-db-backup.service
+sudo install -m 0644 deployment/inventory-db-backup.timer /etc/systemd/system/inventory-db-backup.timer
+sudo install -d -o inventory -g inventory -m 0700 /var/lib/inventory-catalog/backups
+sudo systemctl daemon-reload
+sudo systemctl enable --now inventory-db-backup.timer
+```
+
+The timer runs the backup shortly after boot and then every three hours. Each backup uses SQLite's consistent `.backup` operation and is stored in `/var/lib/inventory-catalog/backups` with mode `0600`. Files older than two days are deleted by the backup job. Test it immediately with:
+
+```bash
+sudo systemctl start inventory-db-backup.service
+sudo systemctl status inventory-db-backup.service
+sudo ls -lh /var/lib/inventory-catalog/backups
+```
+
+### 7. Protect uploaded files with filesystem permissions
+
+The application service account must own the upload directory. This prevents other unprivileged users from adding, changing, or deleting files there; `root` can always override filesystem permissions.
+
+Replace `inventory` below with the `User=` account from `home-inventory.service` if your Pi uses a different account:
+
+```bash
+sudo systemctl stop home-inventory.service
+sudo install -d -o inventory -g inventory -m 0700 /var/lib/inventory-catalog/uploads
+sudo chown -R inventory:inventory /var/lib/inventory-catalog/uploads
+sudo find /var/lib/inventory-catalog/uploads -type d -exec chmod 0700 {} +
+sudo find /var/lib/inventory-catalog/uploads -type f -exec chmod 0600 {} +
+sudo systemctl start home-inventory.service
+```
+
+To clear the current uploads intentionally, stop the service and delete only the contents, leaving the protected directory in place:
+
+```bash
+sudo systemctl stop home-inventory.service
+sudo find /var/lib/inventory-catalog/uploads -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+sudo chown inventory:inventory /var/lib/inventory-catalog/uploads
+sudo chmod 0700 /var/lib/inventory-catalog/uploads
+sudo systemctl start home-inventory.service
+```
+
+Keep the application limited to your home network with your router and firewall. The login is still important, but it is not a replacement for network security. Back up the database and uploads to another device if the data matters.

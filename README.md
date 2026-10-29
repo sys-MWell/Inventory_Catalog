@@ -52,7 +52,7 @@ Do not commit runtime databases, uploaded files, virtual environments, credentia
 
 ## Raspberry Pi deployment
 
-See [`Inventory_Catalog/README.md`](Inventory_Catalog/README.md) for systemd, LAN access, health checks, and optional HTTPS reverse-proxy instructions. Use a generic deployment location and service account for your environment.
+See [`Inventory_Catalog/README.md`](Inventory_Catalog/README.md) for systemd, LAN access, health checks, HTTPS reverse-proxy instructions, three-hour database backups, and upload-directory permissions. Use a generic deployment location and service account for your environment.
 
 ## Development workflow
 

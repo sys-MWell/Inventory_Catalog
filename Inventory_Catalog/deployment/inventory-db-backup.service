@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the Home Inventory database
+
+[Service]
+Type=oneshot
+User=inventory
+Group=inventory
+Environment=INVENTORY_DATABASE=/var/lib/inventory-catalog/inventory.db
+Environment=INVENTORY_BACKUP_DIR=/var/lib/inventory-catalog/backups
+ExecStart=/opt/inventory-catalog/app/deployment/inventory-db-backup.sh

@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the Home Inventory database every three hours
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=3h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
