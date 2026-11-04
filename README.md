@@ -62,4 +62,3 @@ The deployment includes `inventory-db-backup.service` and `inventory-db-backup.t
 2. Test locally.
 3. Commit source, schema, and documentation changes.
 4. Pull the code on the deployment host.
-5. Restart the service so application migrations run against that host's local database.

@@ -45,6 +45,9 @@ def create_app():
                 db.execute("ALTER TABLE items ADD COLUMN box_condition TEXT")
             if "quantity" not in columns:
                 db.execute("ALTER TABLE items ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1")
+            if "currency" not in columns:
+                db.execute("ALTER TABLE items ADD COLUMN currency TEXT")
+            db.executemany("INSERT OR IGNORE INTO currencies (code, name) VALUES (?, ?)", (("USD", "US Dollar"), ("GBP", "British Pound"), ("EUR", "Euro")))
             db.execute("CREATE INDEX IF NOT EXISTS idx_items_brand ON items(brand_id)")
             ensure_accounts(db)
 
@@ -66,6 +69,7 @@ def create_app():
         with connect_db() as db:
             types = db.execute("SELECT * FROM item_types ORDER BY name").fetchall()
             brands = db.execute("SELECT * FROM brands ORDER BY name").fetchall()
+            currencies = db.execute("SELECT code, name FROM currencies ORDER BY code").fetchall()
             fields = []
             if item_type_id:
                 rows = db.execute("SELECT * FROM item_fields WHERE item_type_id = ? ORDER BY sort_order, label", (item_type_id,)).fetchall()
@@ -73,7 +77,7 @@ def create_app():
                     field = dict(row)
                     field["options"] = [option["value"] for option in db.execute("SELECT value FROM item_field_options WHERE field_id = ? ORDER BY sort_order, value", (row["id"],)).fetchall()]
                     fields.append(field)
-        return types, brands, fields
+        return types, brands, currencies, fields
 
     def get_item(item_id):
         with connect_db() as db:
@@ -204,6 +208,7 @@ def create_app():
             "purchase_date": request.form.get("purchase_date", "").strip(),
             "purchase_price": request.form.get("purchase_price", "").strip() or None,
             "estimated_value": request.form.get("estimated_value", "").strip() or None,
+            "currency": request.form.get("currency", "").strip().upper() or None,
             "tags": request.form.get("tags", "").strip(),
             "notes": request.form.get("notes", "").strip(),
             "details": details,
@@ -225,8 +230,16 @@ def create_app():
             if data[field] is not None:
                 try:
                     data[field] = float(data[field])
+                    if data[field] < 0:
+                        errors.append(f"{field.replace('_', ' ').title()} cannot be negative.")
                 except ValueError:
                     errors.append(f"{field.replace('_', ' ').title()} must be a number.")
+        with connect_db() as db:
+            valid_currencies = {row["code"] for row in db.execute("SELECT code FROM currencies").fetchall()}
+        if data["currency"] is not None and data["currency"] not in valid_currencies:
+            errors.append("Choose a currency from the available options.")
+        if (data["purchase_price"] is not None or data["estimated_value"] is not None) and data["currency"] is None:
+            errors.append("Choose a currency when entering a price or estimated value.")
         return errors
 
     @app.route("/items/new", methods=["GET", "POST"])
@@ -245,16 +258,16 @@ def create_app():
                 with connect_db() as db:
                     cursor = db.execute("""
                         INSERT INTO items (name, description, item_type_id, brand_id, category, location, condition,
-                        box_condition, quantity, purchase_date, purchase_price, estimated_value, tags, notes, details, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["box_condition"], data["quantity"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), timestamp, timestamp))
+                        box_condition, quantity, currency, purchase_date, purchase_price, estimated_value, tags, notes, details, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["box_condition"], data["quantity"], data["currency"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), timestamp, timestamp))
                     item_id = cursor.lastrowid
                 save_uploads(item_id)
                 flash("Item added.", "success")
                 return redirect(url_for("item_detail", item_id=item_id))
         selected_type = data.get("item_type_id")
-        types, brands, fields = form_configuration(selected_type)
-        return render_template("item_form.html", item=None, types=types, brands=brands, fields=fields, data=data, title="Add item")
+        types, brands, currencies, fields = form_configuration(selected_type)
+        return render_template("item_form.html", item=None, types=types, brands=brands, currencies=currencies, fields=fields, data=data, title="Add item")
 
     @app.route("/items/<int:item_id>/edit", methods=["GET", "POST"])
     @admin_required
@@ -272,13 +285,13 @@ def create_app():
                 with connect_db() as db:
                     db.execute("""
                         UPDATE items SET name=?, description=?, item_type_id=?, brand_id=?, category=?, location=?, condition=?,
-                        box_condition=?, quantity=?, purchase_date=?, purchase_price=?, estimated_value=?, tags=?, notes=?, details=?, updated_at=? WHERE id=?
-                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["box_condition"], data["quantity"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), now(), item_id))
+                        box_condition=?, quantity=?, currency=?, purchase_date=?, purchase_price=?, estimated_value=?, tags=?, notes=?, details=?, updated_at=? WHERE id=?
+                    """, (data["name"], data["description"], data["item_type_id"], data["brand_id"], data["category"], data["location"], data["condition"], data["box_condition"], data["quantity"], data["currency"], data["purchase_date"], data["purchase_price"], data["estimated_value"], data["tags"], data["notes"], json.dumps(data["details"]), now(), item_id))
                 save_uploads(item_id)
                 flash("Item updated.", "success")
                 return redirect(url_for("item_detail", item_id=item_id))
-        types, brands, fields = form_configuration(data.get("item_type_id"))
-        return render_template("item_form.html", item=item, types=types, brands=brands, fields=fields, data=data, title="Edit item")
+        types, brands, currencies, fields = form_configuration(data.get("item_type_id"))
+        return render_template("item_form.html", item=item, types=types, brands=brands, currencies=currencies, fields=fields, data=data, title="Edit item")
 
     @app.route("/items/<int:item_id>")
     @login_required
@@ -457,7 +470,7 @@ def create_app():
         if format == "csv":
             import csv
             output = io.StringIO()
-            fields = ["id", "name", "type_name", "brand_name", "category", "location", "condition", "box_condition", "quantity", "purchase_date", "purchase_price", "estimated_value", "tags", "notes", "created_at", "updated_at"]
+            fields = ["id", "name", "type_name", "brand_name", "category", "location", "condition", "box_condition", "quantity", "currency", "purchase_date", "purchase_price", "estimated_value", "tags", "notes", "created_at", "updated_at"]
             writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
             writer.writeheader(); writer.writerows(items)
             response = app.response_class(output.getvalue(), mimetype="text/csv")

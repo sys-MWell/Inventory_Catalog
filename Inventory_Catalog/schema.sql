@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS brands (
 	name TEXT NOT NULL UNIQUE
 );
 
+CREATE TABLE IF NOT EXISTS currencies (
+	code TEXT PRIMARY KEY,
+	name TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS item_fields (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	item_type_id INTEGER,
@@ -49,6 +54,7 @@ CREATE TABLE IF NOT EXISTS items (
 	condition TEXT,
 	box_condition TEXT,
 	quantity INTEGER NOT NULL DEFAULT 1,
+	currency TEXT,
 	purchase_date TEXT,
 	purchase_price REAL,
 	estimated_value REAL,
@@ -83,6 +89,9 @@ INSERT OR IGNORE INTO item_types (name) VALUES
 INSERT OR IGNORE INTO brands (name) VALUES
 	('Disney'), ('Universal'), ('LEGO'), ('Funko'), ('Hasbro'), ('Mattel'),
 	('Nintendo'), ('Sony'), ('Microsoft'), ('Apple'), ('Samsung'), ('Other');
+
+INSERT OR IGNORE INTO currencies (code, name) VALUES
+	('USD', 'US Dollar'), ('GBP', 'British Pound'), ('EUR', 'Euro');
 
 INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
 SELECT id, 'author', 'Author', 'text', 10 FROM item_types WHERE name = 'Book';

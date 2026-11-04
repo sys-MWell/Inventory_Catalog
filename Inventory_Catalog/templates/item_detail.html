@@ -70,11 +70,14 @@
                 <dt>Purchase date</dt>
                 <dd>{{ item.purchase_date or '—' }}</dd>
 
+                <dt>Currency</dt>
+                <dd>{{ item.currency or '—' }}</dd>
+
                 <dt>Purchase price</dt>
-                <dd>{{ '%.2f'|format(item.purchase_price) if item.purchase_price is not none else '—' }}</dd>
+                <dd>{{ ((item.currency ~ ' ') if item.currency else '') ~ ('%.2f'|format(item.purchase_price)) if item.purchase_price is not none else '—' }}</dd>
 
                 <dt>Estimated value</dt>
-                <dd>{{ '%.2f'|format(item.estimated_value) if item.estimated_value is not none else '—' }}</dd>
+                <dd>{{ ((item.currency ~ ' ') if item.currency else '') ~ ('%.2f'|format(item.estimated_value)) if item.estimated_value is not none else '—' }}</dd>
 
                 <dt>Tags</dt>
                 <dd>{{ item.tags or '—' }}</dd>
