@@ -39,7 +39,7 @@ The generated temporary passwords are printed once in the console when the accou
 
 Item types and brands are stored in SQLite, not in the page templates. The initial catalog includes brands such as Disney, Universal, LEGO, Funko, Hasbro, Mattel, Nintendo, Sony, Microsoft, Apple, and Samsung. Use **Brands** to add additional brands and filter inventory by brand.
 
-Type-specific fields and select options are also stored in the `item_fields` and `item_field_options` tables. Existing databases are migrated automatically when the application starts; existing items and their flexible JSON details are preserved.
+Type-specific fields and select options are also stored in the `item_fields` and `item_field_options` tables. Currency choices are stored in the `currencies` table and seeded with USD, GBP, and EUR when a database is initialised or migrated.
 
 ## Configuration
 
@@ -207,6 +207,27 @@ sudo find /var/lib/inventory-catalog/uploads -mindepth 1 -maxdepth 1 -exec rm -r
 sudo chown inventory:inventory /var/lib/inventory-catalog/uploads
 sudo chmod 0700 /var/lib/inventory-catalog/uploads
 sudo systemctl start home-inventory.service
+```
+
+### 8. Deploying schema changes without losing data
+
+Before pulling a release that changes the schema, create an immediate database backup and stop the service:
+
+```bash
+sudo systemctl start inventory-db-backup.service
+sudo systemctl stop home-inventory.service
+cd /opt/inventory-catalog/app
+git fetch origin
+git reset --hard origin/master
+sudo systemctl start home-inventory.service
+```
+
+On startup, the application adds missing columns such as `currency` without replacing the existing `inventory.db`. Existing items, images, accounts, and uploads remain in place. Verify the migration and service afterward:
+
+```bash
+sqlite3 /var/lib/inventory-catalog/inventory.db "PRAGMA table_info(items);"
+sudo systemctl status home-inventory.service
+curl http://127.0.0.1:5000/health
 ```
 
 Keep the application limited to your home network with your router and firewall. The login is still important, but it is not a replacement for network security. Back up the database and uploads to another device if the data matters.
