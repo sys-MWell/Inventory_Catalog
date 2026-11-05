@@ -242,6 +242,24 @@ def create_app():
             errors.append("Choose a currency when entering a price or estimated value.")
         return errors
 
+    @app.get("/api/item-fields/<int:item_type_id>")
+    @admin_required
+    def item_fields_api(item_type_id):
+        with connect_db() as db:
+            fields = db.execute("SELECT * FROM item_fields WHERE item_type_id = ? ORDER BY sort_order, label", (item_type_id,)).fetchall()
+            result = []
+            for field in fields:
+                result.append({
+                    "field_key": field["field_key"],
+                    "label": field["label"],
+                    "input_type": field["input_type"],
+                    "options": [
+                        option["value"]
+                        for option in db.execute("SELECT value FROM item_field_options WHERE field_id = ? ORDER BY sort_order, value", (field["id"],)).fetchall()
+                    ],
+                })
+        return jsonify(fields=result)
+
     @app.route("/items/new", methods=["GET", "POST"])
     @admin_required
     def create_item():

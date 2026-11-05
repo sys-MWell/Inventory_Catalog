@@ -125,38 +125,36 @@
             </div>
         </section>
 
-        {% if fields %}
-            <section class="form-section">
-                <h2>Configured details</h2>
+        <section class="form-section" id="configured-details" {% if not fields %}hidden{% endif %}>
+            <h2>Configured details</h2>
 
-                {% set details = data.get('details', {}) %}
-                <div class="form-grid">
-                    {% for field in fields %}
-                        <div>
-                            <label for="detail_{{ field.field_key }}">{{ field.label }}</label>
+            {% set details = data.get('details', {}) %}
+            <div class="form-grid" id="configured-details-fields">
+                {% for field in fields %}
+                    <div>
+                        <label for="detail_{{ field.field_key }}">{{ field.label }}</label>
 
-                            {% if field.input_type == 'select' %}
-                                <select id="detail_{{ field.field_key }}" name="detail_{{ field.field_key }}">
-                                    <option value="">Choose...</option>
-                                    {% for option in field.options %}
-                                        <option value="{{ option }}" {% if details.get(field.field_key) == option %}selected{% endif %}>
-                                            {{ option }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            {% else %}
-                                <input
-                                    id="detail_{{ field.field_key }}"
-                                    name="detail_{{ field.field_key }}"
-                                    type="{{ field.input_type }}"
-                                    value="{{ details.get(field.field_key, '') }}"
-                                >
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
+                        {% if field.input_type == 'select' %}
+                            <select id="detail_{{ field.field_key }}" name="detail_{{ field.field_key }}">
+                                <option value="">Choose...</option>
+                                {% for option in field.options %}
+                                    <option value="{{ option }}" {% if details.get(field.field_key) == option %}selected{% endif %}>
+                                        {{ option }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input
+                                id="detail_{{ field.field_key }}"
+                                name="detail_{{ field.field_key }}"
+                                type="{{ field.input_type }}"
+                                value="{{ details.get(field.field_key, '') }}"
+                            >
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
 
         <section class="form-section">
             <h2>Photos and notes</h2>
@@ -182,4 +180,50 @@
             </a>
         </div>
     </form>
+
+    <script>
+        (() => {
+            const typeSelect = document.getElementById('item_type_id');
+            const detailsSection = document.getElementById('configured-details');
+            const detailsFields = document.getElementById('configured-details-fields');
+            if (!typeSelect || !detailsSection || !detailsFields) return;
+
+            typeSelect.addEventListener('change', async () => {
+                detailsFields.replaceChildren();
+                detailsSection.hidden = true;
+                if (!typeSelect.value) return;
+
+                const response = await fetch(`{{ url_for('item_fields_api', item_type_id=0) }}`.replace('/0', `/${typeSelect.value}`));
+                if (!response.ok) return;
+                const payload = await response.json();
+                for (const field of payload.fields) {
+                    const wrapper = document.createElement('div');
+                    const label = document.createElement('label');
+                    label.htmlFor = `detail_${field.field_key}`;
+                    label.textContent = field.label;
+                    wrapper.append(label);
+
+                    const control = field.input_type === 'select' ? document.createElement('select') : document.createElement('input');
+                    control.id = `detail_${field.field_key}`;
+                    control.name = `detail_${field.field_key}`;
+                    control.type = field.input_type;
+                    if (field.input_type === 'select') {
+                        const placeholder = document.createElement('option');
+                        placeholder.value = '';
+                        placeholder.textContent = 'Choose...';
+                        control.append(placeholder);
+                        for (const option of field.options) {
+                            const optionElement = document.createElement('option');
+                            optionElement.value = option;
+                            optionElement.textContent = option;
+                            control.append(optionElement);
+                        }
+                    }
+                    wrapper.append(control);
+                    detailsFields.append(wrapper);
+                }
+                detailsSection.hidden = payload.fields.length === 0;
+            });
+        })();
+    </script>
 {% endblock %}
