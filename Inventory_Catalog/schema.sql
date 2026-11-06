@@ -115,6 +115,15 @@ INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, s
 SELECT id, 'signed_copy', 'Signed copy', 'select', 100 FROM item_types WHERE name = 'Book';
 
 INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
+SELECT id, 'pop_number', 'Pop! Number', 'number', 10 FROM item_types WHERE name = 'Funko Pop';
+INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
+SELECT id, 'product_line', 'Product Line', 'text', 20 FROM item_types WHERE name = 'Funko Pop';
+INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
+SELECT id, 'franchise', 'Franchise', 'text', 30 FROM item_types WHERE name = 'Funko Pop';
+INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
+SELECT id, 'character_name', 'Character / Name', 'text', 40 FROM item_types WHERE name = 'Funko Pop';
+
+INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
 SELECT id, 'set_number', 'Set number', 'text', 10 FROM item_types WHERE name = 'LEGO';
 INSERT OR IGNORE INTO item_fields (item_type_id, field_key, label, input_type, sort_order)
 SELECT id, 'theme', 'Theme', 'text', 20 FROM item_types WHERE name = 'LEGO';
