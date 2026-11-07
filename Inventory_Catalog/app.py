@@ -48,6 +48,7 @@ def create_app():
             if "currency" not in columns:
                 db.execute("ALTER TABLE items ADD COLUMN currency TEXT")
             db.executemany("INSERT OR IGNORE INTO currencies (code, name) VALUES (?, ?)", (("USD", "US Dollar"), ("GBP", "British Pound"), ("EUR", "Euro")))
+            db.execute("UPDATE item_fields SET input_type = 'text' WHERE field_key = 'product_line'")
             db.execute("CREATE INDEX IF NOT EXISTS idx_items_brand ON items(brand_id)")
             ensure_accounts(db)
 
@@ -253,6 +254,7 @@ def create_app():
                     "field_key": field["field_key"],
                     "label": field["label"],
                     "input_type": field["input_type"],
+                    "placeholder": "e.g. Town, Icons, Rides" if field["field_key"] == "product_line" else "",
                     "options": [
                         option["value"]
                         for option in db.execute("SELECT value FROM item_field_options WHERE field_id = ? ORDER BY sort_order, value", (field["id"],)).fetchall()

@@ -207,6 +207,7 @@
                     control.id = `detail_${field.field_key}`;
                     control.name = `detail_${field.field_key}`;
                     control.type = field.input_type;
+                    if (field.placeholder) control.placeholder = field.placeholder;
                     if (field.input_type === 'select') {
                         const placeholder = document.createElement('option');
                         placeholder.value = '';
